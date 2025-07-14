@@ -8,36 +8,30 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection:', reason);
 });
 
-// Server setup
 const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const tvPostBody = {
-  filter: [{ left: "type", operation: "in_range", right: ["stock"] }], // Fetch only stocks
-  symbols: { query: { types: [] }, tickers: [] },
-  columns: [
-    "logoid",
-    "name",
-    "close",
-    "change_abs",
-    "change",
-    "volume",
-    "exchange"
+  "symbols": { "tickers": [], "query": { "types": [] } },
+  "columns": [
+    "logoid", "name", "close", "change_abs", "change", "volume", "exchange"
   ],
-  sort: { sortBy: "change", sortOrder: "desc" },
-  options: { lang: "en" },
-  range: { from: 0, to: 20 }
+  "filter": [
+    { "left": "exchange", "operation": "nempty" },
+    { "left": "type", "operation": "equal", "right": "stock" }
+  ],
+  "sort": { "sortBy": "change", "sortOrder": "desc" },
+  "options": { "lang": "en" },
+  "range": { "from": 0, "to": 20 }
 };
 
-// Health check
 app.get('/', (req, res) => {
   console.log("✅ Received GET / request");
   res.send('Proxy is running!');
 });
 
-// Screener endpoint
 app.post('/tv-screener', async (req, res) => {
   console.log("📡 Received POST /tv-screener request");
   try {
