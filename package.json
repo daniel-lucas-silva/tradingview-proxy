@@ -1,15 +1,12 @@
 {
   "name": "tradingview-proxy",
   "version": "1.0.0",
-  "description": "Secure TradingView API proxy service",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rmdir /s /q node_modules && del package-lock.json",
-    "install-all": "npm run clean && npm install",
-    "security-check": "npm audit",
-    "full-reset": "npm run clean && npm install && npm audit fix --force"
+    "wipe": "rmdir /s /q node_modules && del package-lock.json",
+    "setup": "npm run wipe && npm install",
+    "refresh": "npm run setup && npm audit fix --force"
   },
   "dependencies": {
     "express": "4.21.2",
