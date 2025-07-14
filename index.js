@@ -1,3 +1,5 @@
+console.log("Starting proxy server...");
+
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
@@ -22,9 +24,13 @@ const tvPostBody = {
   range: { from: 0, to: 20 }
 };
 
-app.get('/', (req, res) => res.send('Proxy is running!'));
+app.get('/', (req, res) => {
+  console.log("Received GET / request");
+  res.send('Proxy is running!');
+});
 
 app.post('/tv-screener', async (req, res) => {
+  console.log("Received POST /tv-screener request");
   try {
     const resp = await fetch('https://scanner.tradingview.com/america/scan', {
       method: 'POST',
@@ -35,7 +41,6 @@ app.post('/tv-screener', async (req, res) => {
       body: JSON.stringify(tvPostBody)
     });
     const json = await resp.json();
-
     console.log("TradingView API response:", JSON.stringify(json));
 
     if (!json.data) {
@@ -46,14 +51,17 @@ app.post('/tv-screener', async (req, res) => {
     const data = json.data.map(row => ({
       symbol: row.s,
       price: row.d[2],
-      gap: row.d[4] * 100,
+      gap: row.d[4] * 100, // percent change
       volume: row.d[5],
       exchange: row.d[6]
     }));
-
     res.json(data);
   } catch (err) {
     console.error("Proxy Error:", err);
     res.status(500).json({ error: err.message });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Proxy running on port ${PORT}`);
 });
