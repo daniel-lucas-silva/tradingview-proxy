@@ -1,3 +1,16 @@
+// Add this at the top of your index.js
+console.log("Server starting...");
+
+app.post('/tv-screener', async (req, res) => {
+  console.log("Request received at", new Date().toISOString());
+  try {
+    // ... rest of your code
+  } catch (error) {
+    console.error("Full error:", error);  // More detailed logging
+    res.status(500).json({ error: error.toString(), stack: error.stack });
+  }
+});
+
 const express = require('express');
 const axios = require('axios');
 const app = express();
