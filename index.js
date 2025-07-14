@@ -1,47 +1,54 @@
 console.log("🚀 Starting TradingView proxy server...");
 
-// Handle uncaught errors gracefully
+// Catch errors
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
 });
-
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection:', reason);
 });
 
-// Setup Express server
+// Server setup
 const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Define TradingView POST payload
 const tvPostBody = {
-  filter: [], // No filters (fetch all)
+  filter: [{ left: "type", operation: "in_range", right: ["stock"] }], // Fetch only stocks
   symbols: { query: { types: [] }, tickers: [] },
   columns: [
-    'logoid', 'name', 'close', 'change_abs', 'change', 'volume', 'exchange'
+    "logoid",
+    "name",
+    "close",
+    "change_abs",
+    "change",
+    "volume",
+    "exchange"
   ],
-  sort: { sortBy: 'change', sortOrder: 'desc' }, // Sort by % change
-  options: { lang: 'en' },
-  range: { from: 0, to: 20 } // Limit results
+  sort: { sortBy: "change", sortOrder: "desc" },
+  options: { lang: "en" },
+  range: { from: 0, to: 20 }
 };
 
-// Root route for health check
+// Health check
 app.get('/', (req, res) => {
   console.log("✅ Received GET / request");
   res.send('Proxy is running!');
 });
 
-// Proxy route to fetch data from TradingView
+// Screener endpoint
 app.post('/tv-screener', async (req, res) => {
   console.log("📡 Received POST /tv-screener request");
   try {
     const resp = await fetch('https://scanner.tradingview.com/america/scan', {
       method: 'POST',
       headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Content-Type': 'application/json'
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'referer': 'https://www.tradingview.com/',
+        'origin': 'https://www.tradingview.com/',
+        'user-agent': 'Mozilla/5.0'
       },
       body: JSON.stringify(tvPostBody)
     });
@@ -70,7 +77,6 @@ app.post('/tv-screener', async (req, res) => {
   }
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log(`⚡ Proxy running on port ${PORT}`);
 });
