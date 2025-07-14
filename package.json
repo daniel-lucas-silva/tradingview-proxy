@@ -1,13 +1,15 @@
 {
   "name": "tradingview-proxy",
   "version": "1.0.0",
+  "description": "Secure TradingView stock screener API proxy",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rmdir /s /q node_modules && del package-lock.json",
+    "reinstall": "npm run clean && npm install",
     "security-check": "npm audit && npm outdated",
-    "clean-install": "rmdir /s /q node_modules && del package-lock.json && npm install",
-    "reset": "npm run clean-install && npm audit fix --force"
+    "full-reset": "npm run reinstall && npm audit fix --force"
   },
   "dependencies": {
     "express": "4.21.2",
@@ -16,5 +18,22 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "keywords": [
+    "tradingview",
+    "stocks",
+    "screener",
+    "market-data",
+    "api-proxy"
+  ],
+  "author": "Ahmed Lakkati",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/tradingview-proxy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/tradingview-proxy/issues"
+  },
+  "homepage": "https://github.com/yourusername/tradingview-proxy#readme"
 }
