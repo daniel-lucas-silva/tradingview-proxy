@@ -1,76 +1,71 @@
-console.log("🚀 Starting TradingView proxy server...");
-
-// Catch errors
-process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-});
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection:', reason);
-});
-
 const express = require('express');
-const fetch = require('node-fetch');
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const tvPostBody = {
-  "symbols": { "tickers": [], "query": { "types": [] } },
-  "columns": [
-    "logoid", "name", "close", "change_abs", "change", "volume", "exchange"
-  ],
+// Middleware
+app.use(express.json());
+
+// TradingView Scanner Payload (Optimized for Gappers)
+const tvPayload = {
   "filter": [
-    { "left": "exchange", "operation": "nempty" },
-    { "left": "type", "operation": "equal", "right": "stock" }
+    { "left": "gap", "operation": "nempty" }, // Focus on stocks with gap %
+    { "left": "exchange", "operation": "in_range", "right": ["NASDAQ", "NYSE"] }, // Only NASDAQ/NYSE
+    { "left": "price", "operation": "in_range", "right": [0.5, 30] } // Price between $0.5 and $30
   ],
-  "sort": { "sortBy": "change", "sortOrder": "desc" },
-  "options": { "lang": "en" },
-  "range": { "from": 0, "to": 20 }
+  "options": { "lang": "en", "active_symbols_only": true },
+  "columns": ["name", "close", "gap", "change", "volume", "exchange"],
+  "sort": { "sortBy": "gap", "sortOrder": "desc" }, // Sort by highest gap %
+  "range": [0, 20] // Top 20 gappers
 };
 
+// Health check
 app.get('/', (req, res) => {
-  console.log("✅ Received GET / request");
-  res.send('Proxy is running!');
+  console.log("✅ Health check OK");
+  res.send('TradingView Proxy is running!');
 });
 
+// Fetch gappers from TradingView
 app.post('/tv-screener', async (req, res) => {
-  console.log("📡 Received POST /tv-screener request");
+  console.log("📡 Fetching gappers from TradingView...");
   try {
-    const resp = await fetch('https://scanner.tradingview.com/america/scan', {
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'content-type': 'application/json',
-        'referer': 'https://www.tradingview.com/',
-        'origin': 'https://www.tradingview.com/',
-        'user-agent': 'Mozilla/5.0'
-      },
-      body: JSON.stringify(tvPostBody)
-    });
+    const response = await axios.post(
+      'https://scanner.tradingview.com/america/scan',
+      tvPayload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': 'https://www.tradingview.com',
+          'Referer': 'https://www.tradingview.com/',
+          'User-Agent': 'Mozilla/5.0'
+        }
+      }
+    );
 
-    const json = await resp.json();
-    console.log("📥 TradingView API raw response:", JSON.stringify(json, null, 2));
-
-    if (!json || !json.data) {
-      console.error("⚠️ Error: 'data' field missing or null in API response");
-      return res.status(500).json({ error: "'data' field missing or null in API response" });
+    if (!response.data.data) {
+      throw new Error("TradingView returned no data. Check filters or API limits.");
     }
 
-    const data = json.data.map(row => ({
-      symbol: row.s,
-      price: row.d[2],
-      gap: (row.d[4] * 100).toFixed(2), // Percent change
-      volume: row.d[5],
-      exchange: row.d[6]
+    // Format data for Google Sheets
+    const stocks = response.data.data.map(stock => ({
+      symbol: stock.s,
+      name: stock.d[0],
+      price: stock.d[1],
+      gap: (stock.d[2] * 100).toFixed(2) + "%", // Convert to percentage
+      change: (stock.d[3] * 100).toFixed(2) + "%",
+      volume: stock.d[4],
+      exchange: stock.d[5]
     }));
 
-    console.log("✅ Processed data:", data);
-    res.json(data);
-  } catch (err) {
-    console.error("🔥 Proxy Error:", err);
-    res.status(500).json({ error: err.message });
+    console.log(`✅ Found ${stocks.length} gappers`);
+    res.json(stocks);
+  } catch (error) {
+    console.error("🔥 Proxy Error:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
+// Start server
 app.listen(PORT, () => {
-  console.log(`⚡ Proxy running on port ${PORT}`);
+  console.log(`🚀 Proxy running on http://localhost:${PORT}`);
 });
