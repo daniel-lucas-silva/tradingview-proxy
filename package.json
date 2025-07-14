@@ -1,13 +1,13 @@
 {
   "name": "tradingview-proxy",
   "version": "1.0.0",
-  "description": "Secure TradingView API proxy service",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "security-check": "npm audit && npm outdated",
-    "clean-install": "rm -rf node_modules package-lock.json && npm install"
+    "clean-install": "rmdir /s /q node_modules && del package-lock.json && npm install",
+    "reset": "npm run clean-install && npm audit fix --force"
   },
   "dependencies": {
     "express": "4.21.2",
@@ -15,28 +15,6 @@
     "follow-redirects": "1.15.9"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
-  "keywords": [
-    "tradingview",
-    "proxy",
-    "stocks",
-    "market-data"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/tradingview-proxy.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yourusername/tradingview-proxy/issues"
-  },
-  "homepage": "https://github.com/yourusername/tradingview-proxy#readme",
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
+    "node": ">=18.0.0"
   }
 }
