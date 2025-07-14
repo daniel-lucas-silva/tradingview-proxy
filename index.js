@@ -36,9 +36,9 @@ app.post('/tv-screener', async (req, res) => {
     }));
     res.json(data);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Proxy Error');
-  }
+    console.error("Proxy Error:", err);
+    res.status(500).json({ error: err.message });
+}
 });
 
 app.listen(PORT, () => {
