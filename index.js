@@ -9,25 +9,27 @@ app.use(express.json());
 // Enhanced TradingView Scanner Configuration
 const tvPayload = {
   "filter": [
-    {"left": "gap", "operation": "nempty"},
+    {"left": "change", "operation": "greater", "right": 0}, // Positive change
+    {"left": "close", "operation": "greater", "right": 1}, // Price > $1
     {"left": "exchange", "operation": "in_range", "right": ["NASDAQ", "NYSE"]},
-    {"left": "price", "operation": "between", "right": [1, 500]}
+    {"left": "is_after_hours", "operation": "equal", "right": true} // KEY: Post-market filter
   ],
   "options": {
     "lang": "en",
     "active_symbols_only": true,
-    "timezone": "America/New_York"
+    "after_hours": true // Enable after-hours data
   },
   "columns": [
     "name",
     "close",
-    "gap",
     "change",
+    "change_abs",
     "volume",
-    "exchange"
+    "exchange",
+    "premarket_change"
   ],
   "sort": {
-    "sortBy": "gap",
+    "sortBy": "change",
     "sortOrder": "desc"
   },
   "range": [0, 20]
