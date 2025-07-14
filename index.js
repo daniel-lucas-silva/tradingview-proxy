@@ -27,20 +27,25 @@ app.post('/tv-screener', async (req, res) => {
       body: JSON.stringify(tvPostBody)
     });
     const json = await resp.json();
+
+    console.log("TradingView API response:", JSON.stringify(json));
+
+    if (!json.data) {
+      console.error("Error: 'data' field missing or null in API response");
+      return res.status(500).json({ error: "'data' field missing or null in API response" });
+    }
+
     const data = json.data.map(row => ({
       symbol: row.s,
       price: row.d[2],
-      gap: row.d[4] * 100, // percent change
+      gap: row.d[4] * 100,
       volume: row.d[5],
       exchange: row.d[6]
     }));
+
     res.json(data);
   } catch (err) {
     console.error("Proxy Error:", err);
     res.status(500).json({ error: err.message });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`Proxy running on port ${PORT}`);
 });
