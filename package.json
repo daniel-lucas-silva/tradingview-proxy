@@ -1,16 +1,21 @@
 {
   "name": "tradingview-proxy",
   "version": "1.0.0",
-  "description": "Secure TradingView stock screener API proxy",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rmdir /s /q node_modules && del package-lock.json",
-    "reinstall": "npm run clean && npm install",
-    "security-check": "npm audit && npm outdated",
-    "full-reset": "npm run reinstall && npm audit fix --force"
+    "install-all": "npm run clean && npm install",
+    "security-check": "npm audit",
+    "full-reset": "npm run clean && npm install && npm audit fix --force"
   },
+  "dependencies": {
+    "express": "4.21.2",
+    "axios": "1.10.0",
+    "follow-redirects": "1.15.9"
+  }
+},
   "dependencies": {
     "express": "4.21.2",
     "axios": "1.10.0",
