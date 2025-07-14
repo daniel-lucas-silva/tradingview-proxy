@@ -1,30 +1,30 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000; // Changed to port 5000 to avoid conflicts
 
 // Middleware
 app.use(express.json());
 
-// TradingView Scanner Configuration
+// Enhanced TradingView Scanner Configuration
 const tvPayload = {
   "filter": [
     {"left": "gap", "operation": "nempty"},
     {"left": "exchange", "operation": "in_range", "right": ["NASDAQ", "NYSE"]},
-    {"left": "price", "operation": ">=", "right": 1}
+    {"left": "price", "operation": "between", "right": [1, 500]}
   ],
   "options": {
     "lang": "en",
-    "active_symbols_only": true
+    "active_symbols_only": true,
+    "timezone": "America/New_York"
   },
   "columns": [
-    "name", 
-    "close", 
-    "gap", 
-    "change", 
-    "volume", 
-    "exchange",
-    "market_cap_basic"
+    "name",
+    "close",
+    "gap",
+    "change",
+    "volume",
+    "exchange"
   ],
   "sort": {
     "sortBy": "gap",
@@ -33,19 +33,22 @@ const tvPayload = {
   "range": [0, 20]
 };
 
-// Health Check Endpoint
+// Health Check
 app.get('/', (req, res) => {
-  console.log("✅ Health check passed");
-  res.send('TradingView Proxy is running!');
+  console.log("✅ Health check passed at", new Date().toISOString());
+  res.status(200).send('TradingView Proxy is operational!');
 });
 
-// Gappers Endpoint
+// Enhanced Gappers Endpoint
 app.post('/tv-screener', async (req, res) => {
-  console.log("📡 Fetching gappers from TradingView...");
+  console.log("📡 Attempting to fetch gappers...");
   
   try {
-    // Add delay to avoid rate limiting (2000ms = 2 seconds)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Add realistic delay to mimic human behavior
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    
+    // Add debug logging
+    console.log("Sending payload to TradingView:", JSON.stringify(tvPayload, null, 2));
     
     const response = await axios.post(
       'https://scanner.tradingview.com/america/scan',
@@ -55,17 +58,20 @@ app.post('/tv-screener', async (req, res) => {
           'Content-Type': 'application/json',
           'Origin': 'https://www.tradingview.com',
           'Referer': 'https://www.tradingview.com/',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'application/json',
+          'Accept-Language': 'en-US,en;q=0.9'
         },
-        timeout: 10000 // 10 second timeout
+        timeout: 15000
       }
     );
 
+    console.log("Received API response with status:", response.status);
+    
     if (!response.data?.data) {
-      throw new Error("No data returned from API");
+      throw new Error("API returned empty data set");
     }
 
-    // Format the response
     const stocks = response.data.data.map(item => ({
       symbol: item.s,
       name: item.d[0],
@@ -73,33 +79,43 @@ app.post('/tv-screener', async (req, res) => {
       gap: `${(item.d[2] * 100).toFixed(2)}%`,
       change: `${(item.d[3] * 100).toFixed(2)}%`,
       volume: item.d[4],
-      exchange: item.d[5],
-      marketCap: item.d[6] ? `$${(item.d[6]/1000000).toFixed(2)}M` : 'N/A'
+      exchange: item.d[5]
     }));
 
-    console.log(`✅ Found ${stocks.length} gappers`);
+    console.log(`✅ Successfully fetched ${stocks.length} stocks`);
     res.json(stocks);
 
   } catch (error) {
-    console.error("🔥 Error:", error.message);
-    res.status(500).json({
-      error: "Failed to fetch data",
-      details: error.message,
+    console.error("‼️ Critical Error:", {
+      message: error.message,
+      stack: error.stack,
       response: error.response?.data
+    });
+    
+    res.status(500).json({
+      error: "Proxy operation failed",
+      reason: error.message,
+      details: error.response?.data || 'No additional details'
     });
   }
 });
 
-// Start Server
+// Start server with enhanced error handling
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server started on http://0.0.0.0:${PORT} at ${new Date().toISOString()}`);
+  console.log("Configuration:", {
+    port: PORT,
+    timeout: "15000ms",
+    rateLimitDelay: "2500ms"
+  });
 });
 
-// Error Handling
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
+// Advanced error handling
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⚠️ Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
+  console.error('⚠️ Uncaught Exception:', err);
+  process.exit(1);
 });
