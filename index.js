@@ -2,6 +2,15 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 5000; // Changed to port 5000 to avoid conflicts
+app.get('/test', (req, res) => {
+    console.log("GET /test received");
+    res.json({ message: "Server is working!" });
+});
+
+app.post('/test-post', (req, res) => {
+    console.log("POST /test-post received");
+    res.json({ message: "POST is working!", body: req.body });
+});
 
 // Middleware
 app.use(express.json());
