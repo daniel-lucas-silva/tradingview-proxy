@@ -4,33 +4,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "wipe": "rmdir /s /q node_modules && del package-lock.json",
-    "setup": "npm run wipe && npm install",
-    "refresh": "npm run setup && npm audit fix --force"
+    "clean": "rmdir /s /q node_modules && del package-lock.json",
+    "reinstall": "npm run clean && npm install",
+    "reset": "npm run reinstall && npm audit fix --force"
   },
   "dependencies": {
     "express": "4.21.2",
     "axios": "1.10.0",
     "follow-redirects": "1.15.9"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": [
-    "tradingview",
-    "stocks",
-    "screener",
-    "market-data",
-    "api-proxy"
-  ],
-  "author": "Ahmed Lakkati",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/tradingview-proxy.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yourusername/tradingview-proxy/issues"
-  },
-  "homepage": "https://github.com/yourusername/tradingview-proxy#readme"
+  }
 }
