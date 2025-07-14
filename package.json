@@ -5,8 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "clean": "rmdir /s /q node_modules && del package-lock.json",
-    "reinstall": "npm run clean && npm install",
-    "reset": "npm run reinstall && npm audit fix --force"
+    "setup": "npm run clean && npm install",
+    "fix": "npm run setup && npm audit fix --force"
   },
   "dependencies": {
     "express": "4.21.2",
